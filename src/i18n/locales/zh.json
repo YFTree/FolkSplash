@@ -28,7 +28,9 @@
   },
   "pack": {
     "packing": "打包中...",
-    "packAndDownload": "打包并下载"
+    "packAndDownload": "打包并下载",
+    "packImages": "打包图片",
+    "packingImages": "打包图片中..."
   },
   "gallery": {
     "imageList": "图片列表",

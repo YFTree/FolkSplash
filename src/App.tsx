@@ -4,6 +4,7 @@ import { useSplashStore } from './store/useSplashStore';
 import { FileUpload } from './components/FileUpload';
 import { ImageGallery } from './components/ImageGallery';
 import { PackButton } from './components/PackButton';
+import { PackImageButton } from './components/PackImageButton';
 import { Layout } from './components/Layout';
 import { AboutPage } from './components/AboutPage';
 
@@ -15,9 +16,12 @@ function HomePage() {
     progress,
     replacingIndex,
     replaceProgress,
+    isPackingImages,
+    packImagesProgress,
     loadSplash,
     replaceImage,
     packAndDownload,
+    packImagesAndDownload,
   } = useSplashStore();
 
   const handleFileSelect = (file: File) => {
@@ -35,6 +39,14 @@ function HomePage() {
   const handlePack = async () => {
     try {
       await packAndDownload();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handlePackImages = async () => {
+    try {
+      await packImagesAndDownload();
     } catch (err) {
       console.error(err);
     }
@@ -67,13 +79,22 @@ function HomePage() {
             replaceProgress={replaceProgress}
           />
 
-          <PackButton
-            onClick={handlePack}
-            disabled={isLoading}
-            loading={isLoading}
-            progress={progress}
-            imageCount={splashData.images.length}
-          />
+          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, flexWrap: 'wrap' }}>
+            <PackImageButton
+              onClick={handlePackImages}
+              disabled={isLoading || isPackingImages}
+              loading={isPackingImages}
+              progress={packImagesProgress}
+              imageCount={splashData.images.length}
+            />
+            <PackButton
+              onClick={handlePack}
+              disabled={isLoading || isPackingImages}
+              loading={isLoading}
+              progress={progress}
+              imageCount={splashData.images.length}
+            />
+          </Box>
         </>
       )}
     </Box>

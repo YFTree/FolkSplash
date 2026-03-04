@@ -28,7 +28,9 @@
   },
   "pack": {
     "packing": "Packing...",
-    "packAndDownload": "Pack and Download"
+    "packAndDownload": "Pack and Download",
+    "packImages": "Pack Images",
+    "packingImages": "Packing images..."
   },
   "gallery": {
     "imageList": "Image List",

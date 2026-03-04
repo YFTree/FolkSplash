@@ -4,6 +4,7 @@ import { parseSplashImg, extractImages } from '../lib/splash-parser';
 import { cleanupSplashData } from '../lib/splash-packer';
 import { imageFileToBmp } from '../lib/bmp';
 import i18n from '../i18n';
+import JSZip from 'jszip';
 
 interface SplashState {
   splashData: SplashData | null;
@@ -12,10 +13,13 @@ interface SplashState {
   progress: number;
   replacingIndex: number | null;
   replaceProgress: number;
+  isPackingImages: boolean;
+  packImagesProgress: number;
 
   loadSplash: (file: File) => Promise<void>;
   replaceImage: (index: number, file: File, resolutionMode: 'original' | 'follow' | 'custom' | 'direct', customWidth?: number, customHeight?: number) => Promise<void>;
   packAndDownload: () => Promise<void>;
+  packImagesAndDownload: () => Promise<void>;
   reset: () => void;
 }
 
@@ -26,6 +30,8 @@ export const useSplashStore = create<SplashState>((set, get) => ({
   progress: 0,
   replacingIndex: null,
   replaceProgress: 0,
+  isPackingImages: false,
+  packImagesProgress: 0,
   
   loadSplash: async (file: File) => {
     set({ isLoading: true, error: null, progress: 0 });
@@ -252,6 +258,50 @@ export const useSplashStore = create<SplashState>((set, get) => ({
         error: err instanceof Error ? err.message : i18n.t('store.packFailed'),
         isLoading: false,
         progress: 0,
+      });
+    }
+  },
+  
+  packImagesAndDownload: async () => {
+    const { splashData } = get();
+
+    if (!splashData) {
+      throw new Error(i18n.t('store.noSplashData'));
+    }
+    
+    set({ isPackingImages: true, packImagesProgress: 0 });
+    
+    try {
+      const zip = new JSZip();
+      const totalImages = splashData.images.length;
+      
+      splashData.images.forEach((image, index) => {
+        zip.file(image.name, image.bmpData);
+        const progress = Math.round(((index + 1) / totalImages) * 100);
+        set({ packImagesProgress: progress });
+      });
+      
+      const content = await zip.generateAsync({ type: 'blob' });
+      
+      const url = URL.createObjectURL(content);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'splash-images.zip';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      set({ isPackingImages: false, packImagesProgress: 100 });
+      
+      setTimeout(() => {
+        set({ packImagesProgress: 0 });
+      }, 500);
+    } catch (err) {
+      set({
+        error: err instanceof Error ? err.message : i18n.t('store.packFailed'),
+        isPackingImages: false,
+        packImagesProgress: 0,
       });
     }
   },
